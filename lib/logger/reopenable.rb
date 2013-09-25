@@ -1,7 +1,22 @@
-require "logger/reopenable/version"
+require 'logger/reopenable/version'
 
-module Logger
+class Logger
   module Reopenable
-    # Your code goes here...
+    def reopen
+      @logdev.reopen if @logdev
+    end
+
+    module LogDevice
+      def reopen
+        return unless @filename
+        @mutex.synchronize do
+          @dev.close
+          @dev = open_logfile(@filename)
+          @dev.sync = true
+        end
+      rescue Exception
+        warn "log reopening failed. #$!"
+      end
+    end
   end
 end
